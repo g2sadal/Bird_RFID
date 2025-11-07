@@ -20,7 +20,7 @@ struct TagData {
 const int maxTags = 2;
 TagData tags[maxTags];
 Dictionary &uidIndex = *(new Dictionary());  // dictionary of uids and corresponding array indices
-int num_nodes = 1; // USER DEFINED
+int num_nodes = 3; // USER DEFINED
 
 
 // ====================== XBee Configuration (Hardware Serial) ======================
@@ -44,7 +44,7 @@ int num_count;
 bool last_id = 0;
 String uidTemp;
 
-unsigned long query_time = 60000 * 0.5;  // Time Interval for querying nodes
+unsigned long query_time = 60000 * 1;  // Time Interval for querying nodes
 unsigned long prev_time;
 unsigned long curr_time;
 
@@ -84,9 +84,10 @@ void loop() {
   curr_time = millis();
   if ((curr_time - prev_time) > query_time) {
     // Serial.println("inside time loop");
-    for (int i = 3; i < num_nodes+3; i++) {
-      // Serial.print(i);
-      // Serial.println(": inside receive loop");
+    for (int i = 2; i < num_nodes+2; i++) { 
+    //   Serial.print(i);
+    //   Serial.println(": inside receive loop");
+      if(i == 3){continue;}
       send_XBee_2emitter(i);
       receive_XBee();   
       delay(1000);
@@ -169,6 +170,8 @@ void drain_XBee() {
 void send_XBee_2emitter(int emitter_ID) {
   sprintf(msg, "<%03d>", emitter_ID);
   Serial1.println(msg);
+  Serial.print("send: ");
+  Serial.println(msg);
 }
 
 void printAllTags() {
