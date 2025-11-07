@@ -30,7 +30,7 @@ int Rx = 2;
 int Tx = 3;
 SoftwareSerial Serial1(Rx, Tx);
 
-int this_node_ID = 3;  // MANUAL INPUT REQUIRED: Unique ID for this node
+int this_node_ID = 4;  // MANUAL INPUT REQUIRED: Unique ID for this node
 int hub_node_ID = 1;
 
 bool started = false;
@@ -54,7 +54,7 @@ void send_XBee();
 
 //*****************************************************************************************//
 void setup() {
-  Serial.begin(9600);                              // Initialize serial communications with the PC
+  //Serial.begin(9600);                              // Initialize serial communications with the PC
   Serial1.begin(9600);
   SPI.begin();                                     // Init SPI bus
   mfrc522.PCD_Init();                              // Init MFRC522 card
@@ -71,7 +71,7 @@ void setup() {
 
 void loop() {
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
-
+  // Serial.println(Serial1.available());
   if (Serial1.available()) {
     Serial.println("Serial available");
     receive_XBee();
@@ -100,7 +100,7 @@ void loop() {
   Serial.println(uid);
 
   TagData &tag = tags[uidIndex[uid].toInt()];
-  if (uid == prevUID && diff < thresh) {
+  if (uid == prevUID && diff < thresh && tag.count > 0) {
     String visits = String(tag.count);
     unsigned long duration = tag.d[visits].toInt() + diff;
     tag.d(visits, String(duration));
@@ -110,6 +110,8 @@ void loop() {
     prevUID = uid;
   }
 
+  Serial.print("node: ");
+  Serial.println(this_node_ID);
   printAllTags();
 }
 // ======================================================================
@@ -170,7 +172,9 @@ void receive_XBee() {
   if (started && ended) {
     String receivedMsg(msg);
     int receiver_ID = receivedMsg.toInt();
+    Serial.println(receiver_ID);
     if (receiver_ID == this_node_ID) {
+      // Serial.println("correct node");
       send_XBee_2receiver();
     }
 
@@ -222,7 +226,7 @@ void send_XBee_2receiver() {
 
       // Create string portion for timing of each visit
       for (int j = 0; j < num_count; j++) {
-        int dur = tags[i].d[j].toInt();
+        float dur = tags[i].d[j].toInt();
         int mins = dur / 60000.0 + 0.5;
         sprintf(temp, "%02d", mins);
         sprintf(times, "%s%s", times, temp);
@@ -237,6 +241,7 @@ void send_XBee_2receiver() {
     Serial.println(msg);
 
     tags[i].count = 0;
+    delete &tags[i].d;
     tags[i].d = *(new Dictionary());
   }
 }
